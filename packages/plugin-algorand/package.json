@@ -1,9 +1,7 @@
 {
-    "name": "@eliza/plugin-algorand",
-    "version": "0.0.1",
+    "name": "@elizaos/plugin-algorand",
+    "version": "0.1.8+build.1",
     "description": "Algorand plugin for Eliza",
-    "author": "Your Name <your@email.com>",
-    "license": "MIT",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "dependencies": {

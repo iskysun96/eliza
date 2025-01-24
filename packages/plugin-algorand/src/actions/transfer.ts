@@ -13,6 +13,11 @@ import {
 import { z } from "zod";
 
 import * as algokit from "@algorandfoundation/algokit-utils";
+import {
+    SigningAccount,
+    TransactionSignerAccount,
+} from "@algorandfoundation/algokit-utils/types/account";
+import { Address, Account } from "algosdk";
 
 import { algorandWalletProvider } from "../providers/wallet";
 import { transferTemplate } from "../templates";
@@ -110,13 +115,30 @@ export const transferAlgo: Action = {
             const mnemonic = runtime.getSetting("ALGORAND_MNEMONIC");
 
             let algorandClient: algokit.AlgorandClient;
+            let algoAccount: Address &
+                TransactionSignerAccount & {
+                    account: SigningAccount | Account;
+                };
             if (network === "mainnet") {
                 algorandClient = algokit.AlgorandClient.mainNet();
-            } else {
+            } else if (network === "testnet") {
                 algorandClient = algokit.AlgorandClient.testNet();
+            } else {
+                algorandClient = algokit.AlgorandClient.defaultLocalNet();
+                algoAccount = algorandClient.account.random();
+
+                // Fund randomly created localnet account with 100 ALGO
+                const localDispenserAccount =
+                    await algorandClient.account.localNetDispenser();
+                algorandClient.account.ensureFunded(
+                    algoAccount.addr,
+                    localDispenserAccount.addr,
+                    algokit.algo(100)
+                );
             }
 
-            const algoAccount = algorandClient.account.fromMnemonic(mnemonic);
+            // Retrieve account from mnemonic if not localnet
+            algoAccount = algorandClient.account.fromMnemonic(mnemonic);
 
             const adjustedAmount = algokit.algos(
                 Number(transferContent.amount)

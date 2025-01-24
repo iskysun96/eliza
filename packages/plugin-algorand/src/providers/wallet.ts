@@ -250,9 +250,20 @@ export const algorandWalletProvider: Provider = {
             } else {
                 algorandClient = algokit.AlgorandClient.defaultLocalNet();
                 algoAccount = algorandClient.account.random();
+
+                // Fund randomly created localnet account with 100 ALGO
+                const localDispenserAccount =
+                    await algorandClient.account.localNetDispenser();
+                algorandClient.account.ensureFunded(
+                    algoAccount.addr,
+                    localDispenserAccount.addr,
+                    algokit.algo(100)
+                );
             }
 
+            // Retrieve account from mnemonic if not localnet
             algoAccount = algorandClient.account.fromMnemonic(mnemonic);
+
             const provider = new WalletProvider(
                 algorandClient,
                 algoAccount,
