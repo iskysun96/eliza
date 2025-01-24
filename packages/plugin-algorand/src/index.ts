@@ -1,14 +1,14 @@
 import { Plugin } from "@elizaos/core";
-import transferToken from "./actions/transfer.ts";
-import { WalletProvider } from "./providers/wallet.ts";
+import { transferAlgo } from "./actions/transfer";
+import { WalletProvider, algorandWalletProvider } from "./providers/wallet";
 
-export { WalletProvider, transferToken as TransferAptosToken };
+export { WalletProvider, transferAlgo as TransferAlgoToken };
 
 export const algorandPlugin: Plugin = {
     name: "algorand",
     description: "Algorand Plugin for Eliza",
     actions: [transferAlgo],
-    providers: [walletProvider],
+    providers: [algorandWalletProvider],
     evaluators: [],
 };
 

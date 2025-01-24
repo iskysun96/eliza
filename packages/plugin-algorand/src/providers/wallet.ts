@@ -7,12 +7,17 @@ import {
 } from "@elizaos/core";
 
 import * as algokit from "@algorandfoundation/algokit-utils";
-import { SigningAccount } from "@algorandfoundation/algokit-utils/types/account";
+import {
+    SigningAccount,
+    TransactionSignerAccount,
+} from "@algorandfoundation/algokit-utils/types/account";
+import { Address, Account } from "algosdk";
+
 import NodeCache from "node-cache";
 import BigNumber from "bignumber.js";
 import * as path from "path";
 
-type Network = "mainnet" | "testnet";
+type Network = "mainnet" | "testnet" | "localnet";
 
 const PROVIDER_CONFIG = {
     MAX_RETRIES: 3,
@@ -31,12 +36,23 @@ interface Prices {
 export class WalletProvider {
     private cache: NodeCache;
     private cacheKey: string = "algorand/wallet";
+    algorandClient: algokit.AlgorandClient;
+    algoAccount: Address &
+        TransactionSignerAccount & {
+            account: SigningAccount | Account;
+        };
 
     constructor(
-        private algorandClient: algokit.AlgorandClient,
-        private algoAccount: SigningAccount,
+        algorandClient: algokit.AlgorandClient,
+        algoAccount: Address &
+            TransactionSignerAccount & {
+                account: SigningAccount | Account;
+            },
         private cacheManager: ICacheManager
     ) {
+        this.algorandClient = algorandClient;
+        this.algoAccount = algoAccount;
+
         this.cache = new NodeCache({ stdTTL: 300 }); // Cache TTL set to 5 minutes
     }
 
@@ -211,7 +227,7 @@ export class WalletProvider {
     }
 }
 
-export const AlgorandWalletProvider: Provider = {
+export const algorandWalletProvider: Provider = {
     get: async (
         runtime: IAgentRuntime,
         _message: Memory,
@@ -219,20 +235,27 @@ export const AlgorandWalletProvider: Provider = {
     ): Promise<string | null> => {
         const network = runtime.getSetting("ALGORAND_NETWORK") as Network;
         const mnemonic = runtime.getSetting("ALGORAND_MNEMONIC");
+        let algoAccount: Address &
+            TransactionSignerAccount & {
+                account: SigningAccount | Account;
+            };
 
         try {
             let algorandClient: algokit.AlgorandClient;
 
             if (network === "mainnet") {
                 algorandClient = algokit.AlgorandClient.mainNet();
-            } else {
+            } else if (network === "testnet") {
                 algorandClient = algokit.AlgorandClient.testNet();
+            } else {
+                algorandClient = algokit.AlgorandClient.defaultLocalNet();
+                algoAccount = algorandClient.account.random();
             }
 
-            const algoAccount = algorandClient.account.fromMnemonic(mnemonic);
+            algoAccount = algorandClient.account.fromMnemonic(mnemonic);
             const provider = new WalletProvider(
                 algorandClient,
-                algoAccount.account,
+                algoAccount,
                 runtime.cacheManager
             );
             return await provider.getFormattedPortfolio(runtime);
