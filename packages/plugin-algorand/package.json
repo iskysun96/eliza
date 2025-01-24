@@ -5,7 +5,7 @@
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "dependencies": {
-        "@algorandfoundation/algokit-utils": "^8.0.3",
+        "@algorandfoundation/algokit-utils": "^8.1.0",
         "@elizaos/core": "workspace:*",
         "algosdk": "^3.0.0"
     },
